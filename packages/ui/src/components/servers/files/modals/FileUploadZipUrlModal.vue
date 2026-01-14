@@ -74,26 +74,24 @@
 
 <script setup lang="ts">
 import { DownloadIcon, ExternalIcon, SpinnerIcon, XIcon } from '@modrinth/assets'
+import { computed, nextTick, ref } from 'vue'
+
 import {
-	BackupWarning,
-	ButtonStyled,
 	injectModrinthClient,
 	injectModrinthServerContext,
 	injectNotificationManager,
-	NewModal,
-} from '@modrinth/ui'
-import { ModrinthServersFetchError } from '@modrinth/utils'
-import { computed, nextTick, ref } from 'vue'
+} from '../../../../providers'
+import ButtonStyled from '../../../base/ButtonStyled.vue'
+import NewModal from '../../../modal/NewModal.vue'
+import BackupWarning from '../../backups/BackupWarning.vue'
 
-import { handleServersError } from '~/composables/servers/modrinth-servers.ts'
-
-const notifications = injectNotificationManager()
+const { addNotification } = injectNotificationManager()
 const client = injectModrinthClient()
 const { serverId } = injectModrinthServerContext()
 
 const cf = ref(false)
 
-const modal = ref<typeof NewModal>()
+const modal = ref<InstanceType<typeof NewModal>>()
 const urlInput = ref<HTMLInputElement | null>(null)
 const url = ref('')
 const submitted = ref(false)
@@ -117,7 +115,6 @@ const error = computed(() => {
 const handleSubmit = async () => {
 	submitted.value = true
 	if (!error.value) {
-		// hide();
 		try {
 			const dry = await client.kyros.files_v0.extractFile(trimmedUrl.value, true, true)
 
@@ -126,19 +123,20 @@ const handleSubmit = async () => {
 				hide()
 			} else {
 				submitted.value = false
-				handleServersError(
-					new ModrinthServersFetchError(
-						'Could not find CurseForge modpack at that URL.',
-						404,
-						new Error(`No modpack found at ${url.value}`),
-					),
-					notifications,
-				)
+				addNotification({
+					title: 'CurseForge modpack not found',
+					text: `Could not find CurseForge modpack at that URL.`,
+					type: 'error',
+				})
 			}
-		} catch (error) {
+		} catch (err) {
 			submitted.value = false
-			console.error('Error installing:', error)
-			handleServersError(error, notifications)
+			console.error('Error installing:', err)
+			addNotification({
+				title: 'Installation failed',
+				text: err instanceof Error ? err.message : 'An unknown error occurred',
+				type: 'error',
+			})
 		}
 	}
 }
