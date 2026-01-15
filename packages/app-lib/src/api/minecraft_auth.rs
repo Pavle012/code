@@ -117,6 +117,7 @@ pub async fn offline_login(
             name: username,
             skins: vec![],
             capes: vec![],
+            fetch_time: None,
         },
         access_token: "offline_token".to_string(), // Dummy token
         refresh_token: "offline_refresh".to_string(), // Dummy token
