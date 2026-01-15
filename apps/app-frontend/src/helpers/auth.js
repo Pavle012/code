@@ -34,6 +34,15 @@ export async function login() {
 }
 
 /**
+ * Authenticate a user with an offline account
+ * @param {string} username
+ * @returns {Promise<Credentials>}
+ */
+export async function offline_login(username) {
+	return await invoke('plugin:auth|offline_login', { username })
+}
+
+/**
  * Retrieves the default user
  * @return {Promise<UUID | undefined>}
  */

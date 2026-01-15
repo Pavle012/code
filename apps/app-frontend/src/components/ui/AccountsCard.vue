@@ -52,6 +52,15 @@
 					<LogInIcon v-if="!loginDisabled" />
 					<SpinnerIcon v-else class="animate-spin" />
 				</Button>
+				<Button
+					v-tooltip="'Add offline account'"
+					:disabled="loginDisabled"
+					icon-only
+					color="raised"
+					@click="loginOffline()"
+				>
+					<PlusIcon />
+				</Button>
 			</div>
 			<div v-if="displayAccounts.length > 0" class="account-group">
 				<div v-for="account in displayAccounts" :key="account.profile.id" class="account-row">
@@ -68,6 +77,10 @@
 				<PlusIcon />
 				Add account
 			</Button>
+			<Button v-if="accounts.length > 0" color="secondary" @click="loginOffline()">
+				<PlusIcon />
+				Add offline account
+			</Button>
 		</Card>
 	</transition>
 </template>
@@ -81,6 +94,7 @@ import { trackEvent } from '@/helpers/analytics'
 import {
 	get_default_user,
 	login as login_flow,
+    offline_login,
 	remove_user,
 	set_default_user,
 	users,
@@ -191,6 +205,22 @@ async function login() {
 	}
 
 	trackEvent('AccountLogIn')
+	loginDisabled.value = false
+}
+
+async function loginOffline() {
+	const username = window.prompt('Enter offline username:')
+	if (!username) return
+
+	loginDisabled.value = true
+	const loggedIn = await offline_login(username).catch(handleSevereError)
+
+	if (loggedIn) {
+		await setAccount(loggedIn)
+		await refreshValues()
+	}
+
+	trackEvent('AccountLogIn', { method: 'offline' })
 	loginDisabled.value = false
 }
 

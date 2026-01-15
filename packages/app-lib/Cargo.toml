@@ -109,6 +109,8 @@ uuid = { workspace = true, features = ["serde", "v4"] }
 whoami = { workspace = true }
 zbus = { workspace = true }
 zip = { workspace = true }
+md-5 = "0.10.6"
+
 
 [build-dependencies]
 dotenvy = { workspace = true }

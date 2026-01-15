@@ -5,6 +5,11 @@ use reqwest::StatusCode;
 use crate::State;
 use crate::state::{Credentials, MinecraftLoginFlow};
 use crate::util::fetch::REQWEST_CLIENT;
+use chrono::{Duration, Utc};
+use md5::Md5;
+use sha2::Digest;
+use uuid::Uuid;
+use crate::state::MinecraftProfile;
 
 #[tracing::instrument]
 pub async fn check_reachable() -> crate::Result<()> {
@@ -87,4 +92,39 @@ pub async fn users() -> crate::Result<Vec<Credentials>> {
     let state = State::get().await?;
     let users = Credentials::get_all(&state.pool).await?;
     Ok(users.into_iter().map(|x| x.1).collect())
+}
+
+#[tracing::instrument]
+pub async fn offline_login(
+    username: String,
+) -> crate::Result<Credentials> {
+    let state = State::get().await?;
+    let mut hasher = Md5::new();
+    hasher.update(format!("OfflinePlayer:{}", username).as_bytes());
+    let hash = hasher.finalize();
+    let mut bytes = [0u8; 16];
+    bytes.copy_from_slice(&hash[..16]);
+
+    // UUID v3/v5 version and variant bits
+    bytes[6] = (bytes[6] & 0x0f) | 0x30; // Version 3 (MD5 based)
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 1 (RFC 4122)
+
+    let uuid = Uuid::from_bytes(bytes);
+
+    let credentials = Credentials {
+        offline_profile: MinecraftProfile {
+            id: uuid,
+            name: username,
+            skins: vec![],
+            capes: vec![],
+        },
+        access_token: "offline_token".to_string(), // Dummy token
+        refresh_token: "offline_refresh".to_string(), // Dummy token
+        expires: Utc::now() + Duration::days(365 * 100), // Effectively never expires
+        active: true,
+    };
+
+    credentials.upsert(&state.pool).await?;
+
+    Ok(credentials)
 }
