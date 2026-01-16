@@ -92,6 +92,14 @@ jobs:
       - name: 🧰 Install dependencies
         run: pnpm install
 
+      - name: 🔧 Configure Release
+        shell: bash
+        run: |
+          if [ '${{ startsWith(github.ref, 'refs/tags/v') }}' != 'true' ]; then
+            echo "Disabling updater artifacts for non-release..."
+            dasel delete -f apps/app/tauri-release.conf.json 'bundle.createUpdaterArtifacts'
+          fi
+
       - name: ✍️ Set up Windows code signing
         if: startsWith(matrix.platform, 'windows')
         shell: bash
