@@ -103,7 +103,13 @@ jobs:
           fi
 
       - name: 🔨 Build macOS app
-        run: pnpm --filter=@modrinth/app run tauri build --target universal-apple-darwin --config tauri-release.conf.json
+        run: |
+          if [ '${{ startsWith(github.ref, 'refs/tags/v') }}' = 'true' ]; then
+            pnpm --filter=@modrinth/app run tauri build --target universal-apple-darwin --config tauri-release.conf.json --bundles "app,dmg,updater"
+          else
+            pnpm --filter=@modrinth/app run tauri build --target universal-apple-darwin --config tauri-release.conf.json --bundles "app,dmg"
+          fi
+
         if: startsWith(matrix.platform, 'macos')
         env:
           ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
@@ -117,7 +123,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
       - name: 🔨 Build Linux app
-        run: pnpm --filter=@modrinth/app run tauri build --config tauri-release.conf.json
+        run: |
+          if [ '${{ startsWith(github.ref, 'refs/tags/v') }}' = 'true' ]; then
+            pnpm --filter=@modrinth/app run tauri build --config tauri-release.conf.json --bundles "deb,rpm,appimage,updater"
+          else
+            pnpm --filter=@modrinth/app run tauri build --config tauri-release.conf.json --bundles "deb,rpm,appimage"
+          fi
+
         if: startsWith(matrix.platform, 'ubuntu')
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
