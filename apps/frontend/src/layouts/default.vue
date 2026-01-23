@@ -47,6 +47,7 @@
 				route.path !== '/settings/billing'
 			"
 		/>
+		<PreviewBanner v-if="config.public.buildEnv === 'production' && config.public.preview" />
 		<StagingBanner v-if="config.public.apiBaseUrl.startsWith('https://staging-api.modrinth.com')" />
 		<GeneratedStateErrorsBanner
 			:errors="generatedStateErrors"
@@ -340,6 +341,12 @@
 								shown: isAdmin(auth.user),
 							},
 							{
+								id: 'servers-transfers',
+								color: 'primary',
+								link: '/admin/servers/transfers',
+								shown: isAdmin(auth.user),
+							},
+							{
 								id: 'servers-nodes',
 								color: 'primary',
 								action: (event) => $refs.modal_batch_credit.show(event),
@@ -366,6 +373,9 @@
 						</template>
 						<template #servers-notices>
 							<IssuesIcon aria-hidden="true" /> {{ formatMessage(messages.manageServerNotices) }}
+						</template>
+						<template #servers-transfers>
+							<TransferIcon aria-hidden="true" /> Server transfers
 						</template>
 						<template #affiliates>
 							<AffiliateIcon aria-hidden="true" /> {{ formatMessage(messages.manageAffiliates) }}
@@ -695,6 +705,7 @@ import {
 	SettingsIcon,
 	ShieldAlertIcon,
 	SunIcon,
+	TransferIcon,
 	UserIcon,
 	UserSearchIcon,
 	XIcon,
@@ -713,6 +724,7 @@ import { isAdmin, isStaff, UserBadge } from '@modrinth/utils'
 import TextLogo from '~/components/brand/TextLogo.vue'
 import BatchCreditModal from '~/components/ui/admin/BatchCreditModal.vue'
 import GeneratedStateErrorsBanner from '~/components/ui/banner/GeneratedStateErrorsBanner.vue'
+import PreviewBanner from '~/components/ui/banner/PreviewBanner.vue'
 import RussiaBanner from '~/components/ui/banner/RussiaBanner.vue'
 import StagingBanner from '~/components/ui/banner/StagingBanner.vue'
 import SubscriptionPaymentFailedBanner from '~/components/ui/banner/SubscriptionPaymentFailedBanner.vue'
@@ -742,9 +754,10 @@ const route = useNativeRoute()
 const router = useNativeRouter()
 const link = config.public.siteUrl + route.path.replace(/\/+$/, '')
 
-const { data: payoutBalance } = await useAsyncData('payout/balance', () =>
-	useBaseFetch('payout/balance', { apiVersion: 3 }),
-)
+const { data: payoutBalance } = await useAsyncData('payout/balance', () => {
+	if (!auth.value.user) return null
+	return useBaseFetch('payout/balance', { apiVersion: 3 })
+})
 
 const showTaxComplianceBanner = computed(() => {
 	if (flags.value.testTaxForm && auth.value.user) return true
@@ -977,16 +990,19 @@ const navRoutes = computed(() => [
 ])
 
 const userMenuOptions = computed(() => {
+	const user = auth.value.user
+	if (!user) return []
+
 	let options = [
 		{
 			id: 'profile',
-			link: `/user/${auth.value.user.username}`,
+			link: `/user/${user.username}`,
 		},
 		{
 			id: 'plus',
 			link: '/plus',
 			color: 'purple',
-			shown: !flags.value.hidePlusPromoInUserMenu && !isPermission(auth.value.user.badges, 1 << 0),
+			shown: !flags.value.hidePlusPromoInUserMenu && !isPermission(user.badges, 1 << 0),
 		},
 		{
 			id: 'servers',
@@ -1039,7 +1055,7 @@ const userMenuOptions = computed(() => {
 		{
 			id: 'affiliate-links',
 			link: '/dashboard/affiliate-links',
-			shown: auth.value.user.badges & UserBadge.AFFILIATE,
+			shown: user.badges & UserBadge.AFFILIATE,
 		},
 		{
 			id: 'revenue',

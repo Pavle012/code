@@ -1533,10 +1533,19 @@ try {
 			useBaseFetch(`project/${projectId.value}/dependencies`, {}),
 		),
 		useAsyncData(`project/${projectId.value}/version`, () =>
-			useBaseFetch(`project/${projectId.value}/version`),
+			useBaseFetch(`project/${projectId.value}/version`, {
+				query: {
+					include_changelog: false,
+				},
+			}),
 		),
 		useAsyncData(`project/${projectId.value}/version/v3`, () =>
-			useBaseFetch(`project/${projectId.value}/version`, { apiVersion: 3 }),
+			useBaseFetch(`project/${projectId.value}/version`, {
+				apiVersion: 3,
+				query: {
+					include_changelog: false,
+				},
+			}),
 		),
 		useAsyncData(`project/${projectId.value}/organization`, () =>
 			useBaseFetch(`project/${projectId.value}/organization`, { apiVersion: 3 }),
@@ -1629,7 +1638,7 @@ const members = computed(() => {
 	const acceptedMembers = allMembers.value.filter((x) => x.accepted)
 	const owner = acceptedMembers.find((x) =>
 		organization.value
-			? organization.value.members.some(
+			? organization.value.members?.some(
 					(orgMember) => orgMember.user.id === x.user.id && orgMember.is_owner,
 				)
 			: x.is_owner,

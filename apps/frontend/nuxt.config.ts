@@ -1,5 +1,4 @@
 import { GenericModrinthClient, type Labrinth } from '@modrinth/api-client'
-import { LOCALES } from '@modrinth/ui/src/composables/i18n.ts'
 import serverSidedVue from '@vitejs/plugin-vue'
 import fs from 'fs/promises'
 import { defineNuxtConfig } from 'nuxt/config'
@@ -167,6 +166,17 @@ export default defineNuxtConfig({
 
 			await fs.writeFile('./src/generated/state.json', JSON.stringify(state))
 
+			// throw if errors and building for prod (preview & staging allowed to have errors)
+			if (
+				process.env.BUILD_ENV === 'production' &&
+				process.env.PREVIEW !== 'true' &&
+				generatedState.errors.length > 0
+			) {
+				throw new Error(
+					`Production build failed: State generation encountered errors. Error codes: ${JSON.stringify(generatedState.errors)}; API URL: ${API_URL}`,
+				)
+			}
+
 			console.log('Tags generated!')
 
 			const robotsContent =
@@ -188,6 +198,8 @@ export default defineNuxtConfig({
 			pyroBaseUrl: process.env.PYRO_BASE_URL,
 			siteUrl: getDomain(),
 			production: isProduction(),
+			buildEnv: process.env.BUILD_ENV,
+			preview: process.env.PREVIEW === 'true',
 			featureFlagOverrides: getFeatureFlagOverrides(),
 
 			owner: process.env.VERCEL_GIT_REPO_OWNER || 'modrinth',
@@ -223,7 +235,6 @@ export default defineNuxtConfig({
 		},
 	},
 	modules: [
-		'@nuxtjs/i18n',
 		'@pinia/nuxt',
 		'floating-vue/nuxt',
 		// Sentry causes rollup-plugin-inject errors in dev, only enable in production
@@ -243,25 +254,6 @@ export default defineNuxtConfig({
 			},
 		},
 	},
-	i18n: {
-		defaultLocale: 'en-US',
-		lazy: true,
-		langDir: '.',
-		locales: LOCALES.map((locale) => ({
-			...locale,
-			file: 'locale-loader.ts',
-		})),
-		strategy: 'no_prefix',
-		detectBrowserLanguage: {
-			useCookie: true,
-			cookieKey: 'locale',
-			fallbackLocale: 'en-US',
-		},
-		vueI18n: './i18n.config.ts',
-		bundle: {
-			optimizeTranslationDirective: false,
-		},
-	},
 	nitro: {
 		rollupConfig: {
 			// @ts-expect-error because of rolldown-vite - completely fine though
@@ -274,6 +266,7 @@ export default defineNuxtConfig({
 		},
 		replace: {
 			__SENTRY_RELEASE__: JSON.stringify(process.env.CF_PAGES_COMMIT_SHA || 'unknown'),
+			__SENTRY_ENVIRONMENT__: JSON.stringify(process.env.BUILD_ENV || 'development'),
 		},
 	},
 	devtools: {
@@ -320,7 +313,7 @@ export default defineNuxtConfig({
 	compatibilityDate: '2025-01-01',
 	telemetry: false,
 	experimental: {
-		asyncContext: false,
+		asyncContext: true,
 	},
 	sourcemap: { client: 'hidden' },
 	sentry: {

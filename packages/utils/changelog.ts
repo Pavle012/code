@@ -11,6 +11,56 @@ export type VersionEntry = {
 
 const VERSIONS: VersionEntry[] = [
 	{
+		date: `2026-01-22T11:40:00-08:00`,
+		product: 'web',
+		body: `## Improvements
+- Updated Flathub to be the official recommended way to download Modrinth App on Linux.`,
+	},
+	{
+		date: `2026-01-21T14:55:00-08:00`,
+		product: 'web',
+		body: `## Improvements
+- Cache version changelogs so they don't need to re-fetch every time.`,
+	},
+	{
+		date: `2026-01-18T11:35:00-08:00`,
+		product: 'web',
+		body: `## Improvements
+- Updated home page project count to 100,000+.
+- Fixed versions with duplicate changelogs not grouping together in Changelog tab on project pages.`,
+	},
+	{
+		date: `2026-01-16T12:05:00-08:00`,
+		product: 'hosting',
+		body: `## Improvements
+- Fixed Files tab looking weird in light mode.
+- Fixed some errors with Files tab.`,
+	},
+	{
+		date: `2026-01-16T12:05:00-08:00`,
+		product: 'web',
+		body: `## Improvements
+- Fixed analytics not working.
+- Fixed navbar items with icons being invisible in light mode.`,
+	},
+	{
+		date: `2026-01-15T15:20:00-08:00`,
+		product: 'web',
+		body: `## Improvements
+- Fixed project pages with many versions with long changelogs not loading.
+- Fixed discover page URLs not working with certain filter types.
+- Added loader colors to the search filters.`,
+	},
+	{
+		date: `2026-01-15T13:30:00-08:00`,
+		product: 'app',
+		version: '0.10.26',
+		body: `## Improvements
+- Fixed many checkboxes not having labels for screen readers.
+- Fixed 'Jump back in' setting not working sometimes.
+- Fixed crash issues when opening folders.`,
+	},
+	{
 		date: `2026-01-12T16:30:00-08:00`,
 		product: 'web',
 		body: `## Improvements
