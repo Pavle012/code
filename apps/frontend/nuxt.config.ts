@@ -351,7 +351,7 @@ export default defineNuxtConfig({
 
 function getApiUrl() {
 	// @ts-ignore
-	return process.env.BROWSER_BASE_URL ?? globalThis.BROWSER_BASE_URL ?? STAGING_API_URL
+	return process.env.BROWSER_BASE_URL ?? globalThis.BROWSER_BASE_URL ?? 'https://api.modrinth.com/v2/'
 }
 
 function isProduction() {

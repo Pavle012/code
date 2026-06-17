@@ -122,7 +122,7 @@ setupLoadingStateProvider()
 
 const client = createModrinthClient(auth.value, {
 	apiBaseUrl: config.public.apiBaseUrl.replace('/v2/', '/'),
-	archonBaseUrl: config.public.pyroBaseUrl.replace('/v2/', '/'),
+	archonBaseUrl: (config.public.pyroBaseUrl || 'http://localhost:8000').replace('/v2/', '/'),
 	rateLimitKey: config.rateLimitKey,
 })
 provideModrinthClient(client)
