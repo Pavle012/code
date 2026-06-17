@@ -1,6 +1,29 @@
 # Deploying Modrinth Server Hosting
-
 This guide describes the easiest ways to deploy the Modrinth Server Hosting Backend (`labrinth`) and the Web Frontend.
+
+---
+
+## Prerequisites
+
+### Docker Desktop (Recommended for most users)
+Docker Desktop bundles both Docker and Docker Compose in a single install, making it the easiest way to get started.
+
+1. Download and install Docker Desktop for your platform:
+   - **Windows**: [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
+   - **macOS**: [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
+   - **Linux**: [Docker Desktop for Linux](https://docs.docker.com/desktop/install/linux-install/)
+2. Launch Docker Desktop and wait for the Docker engine to fully start (the whale icon in the system tray should be steady, not animated).
+3. Verify the installation by opening a terminal and running:
+   ```bash
+   docker --version
+   docker compose version
+   ```
+   Both commands should print version numbers. No separate Docker Compose install is needed.
+
+### Manual Install (Linux servers / headless environments)
+If you're running a server without a desktop environment, install Docker Engine and the Compose plugin separately:
+- [Docker Engine](https://docs.docker.com/engine/install/)
+- [Docker Compose plugin](https://docs.docker.com/compose/install/)
 
 ---
 
@@ -8,13 +31,10 @@ This guide describes the easiest ways to deploy the Modrinth Server Hosting Back
 
 This is the easiest way to deploy the entire stack (databases, server hosting backend, and the web frontend) in a single command.
 
-### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
 ### Steps
+
 1. **Configure Environment Variables (Optional)**
-   The web frontend is pre-configured to use `api.modrinth.com` for downloading mods/packs, and point server actions to the local hosting backend at `http://localhost:8000/`. If you want to change the server hosting URL, customize the `PYRO_BASE_URL` environment variable inside [docker-compose.yml](file:///home/pavle/code/forks/modrinthosting/docker-compose.yml):
+   The web frontend is pre-configured to use `api.modrinth.com` for downloading mods/packs, and point server actions to the local hosting backend at `http://localhost:8000/`. If you want to change the server hosting URL, customize the `PYRO_BASE_URL` environment variable inside `docker-compose.yml`:
    ```yaml
    frontend:
      environment:
@@ -31,6 +51,8 @@ This is the easiest way to deploy the entire stack (databases, server hosting ba
    - Build and start the PostgreSQL, Redis, Clickhouse, Typesense, Meilisearch, and Mail services.
    - Compile and start the Rust `labrinth` backend server on port `8000`.
    - Build and start the Nuxt 3 web frontend on port `3000`.
+
+   > **Docker Desktop tip:** You can also open the repository folder in Docker Desktop's GUI, which will detect the `docker-compose.yml` and let you start the stack with a single click from the **Containers** tab.
 
 3. **Access Services**
    - **Web Frontend**: `http://localhost:3000`
@@ -49,10 +71,11 @@ Use this method if you want to run the applications directly on your host machin
    ```bash
    docker compose up postgres_db redis clickhouse typesense0 meilisearch0 -d
    ```
+   > **Docker Desktop tip:** After running the above command, you can monitor the individual database containers in the **Containers** panel in Docker Desktop — useful for checking logs or restarting a specific service.
 
 2. **Deploy/Run Backend (`labrinth`)**
    - Install Rust (1.80+).
-   - Ensure database env variables are configured. (You can copy and edit the defaults from [apps/labrinth/.env.local](file:///home/pavle/code/forks/modrinthosting/apps/labrinth/.env.local) to a `.env` file).
+   - Ensure database env variables are configured. (You can copy and edit the defaults from `apps/labrinth/.env.local` to a `.env` file).
    - Run:
      ```bash
      cargo run --release --bin labrinth
@@ -68,7 +91,7 @@ Use this method if you want to run the applications directly on your host machin
      ```bash
      # To run in Dev Mode:
      pnpm --filter @modrinth/frontend dev
-     
+
      # Or Build & Run in Production Mode:
      pnpm --filter @modrinth/frontend build
      node apps/frontend/.output/server/index.mjs
